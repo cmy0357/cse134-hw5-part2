@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HW5 Current Weather</title>
+</head>
+
+<body>
+
+<h1>Current Weather</h1>
+<weather-widget>Current Weather Conditions Unavailable</weather-widget>
+
+<script>
+    class WeatherWidget extends HTMLElement {
+        constructor() {
+            super();
+            this.attachShadow({ mode: 'open' });
+            this.shadowRoot.innerHTML = `
+            <style>
+                #weather {
+                    font-size: 20pt;
+                }
+            </style>
+            <div id="weather"></div>
+            `;
+            this.fetchWidget();
+        }
+
+        fetchWidget() {
+            setTimeout(() => {
+                fetch("https://api.weather.gov/points/32.842674,-117.257767")
+                    .then(response => response.json())
+                    .then(data => {
+                        const forecast = data.properties.forecast;
+                        return fetch(forecast);
+                    })
+                    .then(response => response.json())
+                    .then(forecastData => {
+                        const periods = forecastData.properties.periods;
+                        const tonight = periods[0];
+                        const temperature = tonight.temperature;
+                        const tempUnit = tonight.temperatureUnit;
+                        const description = tonight.shortForecast;
+                        const message = `${description} ${temperature}\u00B0${tempUnit}`
+                        this.displayWeather(message,description);
+                    })
+                    .catch(error => {
+                        console.error("Network Connection Failed!!!");
+                    })
+            }, 1000);
+        }
+
+        displayWeather(message, description) {
+			const weatherElement = this.shadowRoot.getElementById('weather');
+            const msg = document.createTextNode(message);
+            const icon = document.createElement('img');
+            switch(description) {
+                case "Fair/clear":
+                case "Clear":
+                case "Mostly Clear":
+                    icon.setAttribute("src", "images/sunny.png");
+                    break;
+                case "A few clouds":
+                case "Partly Cloudy":
+                case "Mostly Cloudy":
+                case "Overcast":
+                    icon.setAttribute("src", "images/cloudy.png");
+                    break;
+                case "Fair/clear and windy":
+                case "A few clouds and windy":
+                case "Partly cloudy and windy":
+                case "Mostly cloudy and windy":
+                case "Overcast and windy":
+                    icon.setAttribute("src", "images/windy.png");
+                    break;
+                case "Snow":
+                case "Rain/snow":
+                case "Snow/sleet":
+                    icon.setAttribute("src", "images/snowy.png");
+                    break;
+                case "Freezing rain":
+                case "Rain/freezing rain":
+                case "Freezing rain/snow":
+                case "Sleet":
+                case "Rain":
+                case "Rain showers (high cloud cover)":
+                case "Rain showers (low cloud cover)":
+                    icon.setAttribute("src", "images/cloudy_and_rainy.png");
+                    break;
+                case "Thunderstorm (high cloud cover)":
+                case "Thunderstorm (medium cloud cover)":
+                case "Thunderstorm (low cloud cover)":
+                case "Tornado":
+                case "Hurricane conditions":
+                case "Tropical storm conditions":
+                    icon.setAttribute("src", "images/thunderstorm.png");
+                    break;
+                case "Hot":
+                    icon.setAttribute("src", "images/hot.png");
+                    break;
+                case "Cold":
+                    icon.setAttribute("src", "images/cold.png");
+                    break;
+                case "Fog/mist":
+                case 'Patchy Fog':
+                    icon.setAttribute("src", "images/fog.png");
+                    break;
+                default:
+                    icon.setAttribute("src", "images/default.png");
+            }
+            weatherElement.appendChild(icon);
+            weatherElement.appendChild(msg);
+		}
+    }
+    window.customElements.define('weather-widget', WeatherWidget);
+</script>
+
+</body>
+</html>
