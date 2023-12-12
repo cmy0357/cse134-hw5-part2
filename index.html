@@ -33,6 +33,7 @@
                     .then(response => response.json())
                     .then(data => {
                         const forecast = data.properties.forecast;
+			console.log(forecast);
                         return fetch(forecast);
                     })
                     .then(response => response.json())
